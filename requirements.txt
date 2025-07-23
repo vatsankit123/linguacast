@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+celery
+redis
+python-multipart
+pydantic
+aiofiles
+moviepy
+ffmpeg-python
+httpx
+openai  # or 'ollama' if you use local LLMs
