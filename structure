@@ -1,18 +1,29 @@
 linguacast/
+│
 ├── app/
+│   ├── __init__.py
+│   ├── main.py                    # FastAPI entrypoint
+│
 │   ├── api/
-│   │   └── routes.py
-│   ├── tasks/
-│   │   ├── transcription.py
-│   │   ├── summarize.py
-│   │   └── translate.py
+│   │   ├── __init__.py
+│   │   └── routes.py              # API routes (upload, status check)
+│
 │   ├── chunker/
-│   │   └── chunker.py
-│   ├── ollama/
-│   │   └── runner.py
-│   ├── utils/
-│   │   └── file_handler.py
-│   ├── models/
-│   └── main.py
-├── worker.py
-├── requirements.txt
+│   │   ├── __init__.py
+│   │   └── chunker.py             # Audio chunking using FFmpeg
+│
+│   ├── transcriber/
+│   │   ├── __init__.py
+│   │   └── transcribe_chunks.py   # Whisper-based transcriber
+│
+│   ├── workers/
+│   │   ├── __init__.py
+│   │   └── background_worker.py   # Thread pool, job queue, job manager
+│
+├── uploads/                       # Uploaded audio files
+├── chunks/                        # Temporary chunks (auto-deleted after use)
+├── transcripts/                   # (Optional) Store final transcripts if needed
+├── requirements.txt               # Python dependencies
+├── README.md                      # Project overview
+├── .gitignore                     # Git ignore config
+└── test_chunk.py                  # Test script (optional)
