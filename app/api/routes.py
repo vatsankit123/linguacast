@@ -6,7 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from app.chunker.chunker import split_audio_ffmpeg
 from app.transcriber.transcribe_chunks import transcribe_chunks
 from app.worker.state import jobs
-from app.utils.validators import validate_audio_file  # ✅ Custom validator
+from app.utils.validators import validate_audio_file
+from app.utils.media_utils import extract_audio_from_video
 
 router = APIRouter()
 executor = ThreadPoolExecutor(max_workers=4)  # Adjust as needed
@@ -32,13 +33,24 @@ def process_audio_task(file_path: str, job_id: str):
         jobs[job_id]["status"] = "failed"
         jobs[job_id]["error"] = str(e)
 
-# 📥 Upload & process audio file
-@router.post("/upload-audio/")
-async def upload_audio(file: UploadFile = File(...)):
+def process_video_task(file_path: str, job_id: str):
     try:
-        # 1. Validate audio file
-        validate_audio_file(file)
+        audio_file_path = extract_audio_from_video(file_path)
+        executor.submit(process_audio_task, audio_file_path, job_id)
+    except Exception as e:
+        jobs[job_id]["status"] = "failed"
+        jobs[job_id]["error"] = str(e)
+# 📥 Upload & process audio file
+@router.post("/upload/")
+async def upload(file: UploadFile = File(...)):
+    try:
+        # 1. Validate file
+        validated_file = validate_audio_file(file)
 
+        # If invalid
+        if validated_file=="invalid":
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
+        
         # 2. Save file
         upload_dir = "uploads"
         os.makedirs(upload_dir, exist_ok=True)
@@ -55,12 +67,19 @@ async def upload_audio(file: UploadFile = File(...)):
         }
 
         # 4. Run background processing
-        executor.submit(process_audio_task, file_path, job_id)
+        if validated_file=="audio":
+            executor.submit(process_audio_task, file_path, job_id)
 
-        return {
-            "job_id": job_id,
-            "message": "Processing started"
-        }
+            return {
+                "job_id": job_id,
+                "message": "Processing started"
+            }
+        if validated_file=="video":
+            executor.submit(process_video_task, file_path, job_id)
+            return {
+                "job_id": job_id,
+                "message": "Processing started"
+            }
 
     except HTTPException as http_err:
         raise http_err
