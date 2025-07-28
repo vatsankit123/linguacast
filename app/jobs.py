@@ -26,4 +26,4 @@ def update_status(job_id: str, status: JobStatus, result: Any = None, error: str
 
 def get_job(job_id: str) -> Dict[str, Any]:
     with _lock:
-        return _jobs.get(job_id, {"status": None, "result": None, "error": None})
+        return _jobs.get(job_id, {"status": None, "result": {}, "error": None})

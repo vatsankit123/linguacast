@@ -9,3 +9,4 @@ app.include_router(router)
 @app.get("/")
 def root():
     return {"message": "Linguacast is running"}
+
